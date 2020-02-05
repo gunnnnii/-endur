@@ -1,3 +1,6 @@
 **/*.class
 **/*.java
 **/*.java~
+**/jflex-full-1.7.0.jar
+**/out
+**/out.txt
