@@ -1,0 +1,29 @@
+// Leading comment
+
+func(arg1, arg2)	// Trailing comment
+{
+	var local_var0;
+	var local_var1;
+	var chain0, chain1, chain2;
+
+	nameTest;
+	assign0 = assign1;
+	func(10, 0.4, null, false, true, "string", 'c');
+	add0 = (add1 + add2);
+	if (condition == 0)
+	{
+		action0();
+	}
+	elsif (condition >= 4) {
+		action2();
+	} else {
+		return "value";
+	}
+
+	while (true)
+	{
+		local_var0++;
+	}
+
+	return true;
+}
