@@ -1,0 +1,21 @@
+# A test program, this line should not appear in the scanners output
+main (x, y, z) {
+  var u, p q;
+  u = 6;
+  p = 4;
+  q = 10;
+  ## 
+  Another comment, this time it is multiline
+  and every line is ignored! 
+  ##
+  while(x > q) {
+    if (y > p) {
+      return y + p;
+    } elseif (z > u) {
+      return z + u;
+    }
+    y = y - 1;
+    z = z - 1;
+    x = x - 1;
+  }
+}
