@@ -40,17 +40,14 @@ public static void main( String[] args ) throws Exception
 	while( token!=0 )
 	{
 		
-		System.out.println(""+lexer.getToken()+": \'"+lexer.getLexeme()+"\'");
+		System.out.println(""+token+": \'"+lexeme+"\'");
 		token = lexer.yylex();
 
 	}
 }
 
 
-/**
- * Eitthvað svona sem hann var að tala um?
- * 
- */
+
 public int getToken(){
 	return t;
 }
