@@ -40,7 +40,7 @@ public static void main( String[] args ) throws Exception
 	while( token!=0 )
 	{
 		
-		System.out.println(""+token+": \'"+lexeme+"\'");
+		System.out.println(""+lexer.getToken()+": \'"+lexer.getLexeme()+"\'");
 		token = lexer.yylex();
 
 	}
@@ -48,9 +48,9 @@ public static void main( String[] args ) throws Exception
 
 
 /**
- * Spurning hvort þetta sé það sem hann var að tala um?
+ * Eitthvað svona sem hann var að tala um?
  * 
- 
+ */
 public int getToken(){
 	return t;
 }
@@ -59,12 +59,12 @@ public String getLexeme(){
 	return lexeme;
 }
 
-public int advance()(){
+public int advance()throws IOException {
 	return this.yylex();
 }
 
-*/
-pub
+
+
 
 %}
 
@@ -90,7 +90,7 @@ _OPNAME=[\+\-*/]
 
 {_DELIM} {
 	lexeme = yytext();
-	// t = yycharat(0);
+	t = yycharat(0);
 	return yycharat(0);
 }
 
@@ -98,7 +98,7 @@ _OPNAME=[\+\-*/]
 
 {_OPNAME} {
 	lexeme = yytext();
-	// t = OPNAME;
+	t = OPNAME;
 	return OPNAME;
 }
 
@@ -106,7 +106,7 @@ _OPNAME=[\+\-*/]
 
 {_STRING} | {_FLOAT} | {_CHAR} | {_INT} | null | true | false {
 	lexeme = yytext();
-	// t = LITERAL;
+	t = LITERAL;
 	return LITERAL;
 }
 
@@ -115,56 +115,54 @@ _OPNAME=[\+\-*/]
 
 "if" {
 	lexeme = yytext();
-	// t = IF;
+	t = IF;
 	return IF;
 }
 
 
 "elseif" {
 	lexeme = yytext();
-	// t = ELSEIF;
+	t = ELSEIF;
 	return ELSEIF;
 }
 
 
 "else" {
 	lexeme = yytext();
-	// t = ELSE;
+	t = ELSE;
 	return ELSE;
 }
 
 
 "while" {
 	lexeme = yytext();
-	// t = WHILE;
+	t = WHILE;
 	return WHILE;
 }
 
 
 "var" {
 	lexeme = yytext();
-	// t = VAR;
+	t = VAR;
 	return VAR;
 }
 
 
 "return" {
 	lexeme = yytext();
-	// t = RETURN;
+	t = RETURN;
 	return RETURN;
 }
 
 
 "=" {
 	lexeme = yytext();	
-	// t = ASSIGNMENT;
+	t = ASSIGNMENT;
 	return ASSIGNMENT;
 }
-
-
 {_NAME} {
 	lexeme = yytext();	
-	// t = NAME;
+	t = NAME;
 	return NAME;
 }
 
@@ -178,6 +176,6 @@ _OPNAME=[\+\-*/]
 
 . {
 	lexeme = yytext();
-	// t=ERROR;
+	t=ERROR;
 	return ERROR;
 }
