@@ -21,6 +21,8 @@ import java.io.*;
 %public
 %class NanoLexer
 %unicode
+%line
+%column
 %byaccj
 
 %{
@@ -30,6 +32,7 @@ import java.io.*;
 
 // Definitions of tokens:
 final static int ERROR = -1;
+final static int EOF = 0;
 final static int DELIM = 1000;
 
 final static int NAME = 1010;
@@ -57,6 +60,8 @@ private static int          bufferSize;
 private static int          bufferAt;
 private static String[]     lexBuffer;
 private static int[]        tokBuffer;
+private static int[]        lineBuffer;
+private static int[]        colBuffer;
 private static Boolean      eof;
 
 // This runs the scanner:
@@ -83,8 +88,16 @@ public static void main( String[] args ) throws Exception
 	*/
 }
 
+public int line() {
+    return lineBuffer[bufferAt] + 1;
+}
+
+public int column() {
+    return colBuffer[bufferAt] + 1;
+}
+
 public int peekToken(int ahead)
-        throws Exception
+        throws IllegalArgumentException
 {
     if (ahead < 0 || ahead >= bufferSize) {
         throw new IllegalArgumentException();
@@ -94,7 +107,7 @@ public int peekToken(int ahead)
 }
 
 public String peekLexeme(int ahead)
-        throws Exception
+        throws IllegalArgumentException
 {
     if (ahead < 0 || ahead >= bufferSize) {
         throw new IllegalArgumentException();
@@ -124,12 +137,16 @@ public void advance()
     if (eof) {
         lexBuffer[bufferAt] = "";
         tokBuffer[bufferAt] = 0;
+        lineBuffer[bufferAt] = yyline;
+        colBuffer[bufferAt] = yycolumn;
         bufferAt = ringIndex(bufferAt + 1);
     } else {
         int token = this.yylex();
         if (token != 0) {
             tokBuffer[bufferAt] = token;
             lexBuffer[bufferAt] = lexeme;
+            lineBuffer[bufferAt] = yyline;
+            colBuffer[bufferAt] = yycolumn;
             bufferAt = ringIndex(bufferAt + 1);
         } else {
             eof = true;
@@ -155,6 +172,8 @@ public void init(int lookAhead)
     bufferAt = 0;
     lexBuffer = new String[bufferSize];
     tokBuffer = new int[bufferSize];
+    lineBuffer = new int[bufferSize];
+    colBuffer = new int[bufferSize];
 
     // Fill out the initial state of the ring buffer in
     //  a quick loop.
@@ -192,11 +211,11 @@ _RETURN="return"
   /* Scanning rules */
 
 "//".*$ {
-    // Single line comment.
+    // Single line comment.  Can be trailing or alone.
 }
 
-"/*"(.\n)*"*/" {
-    // Multi-line or block comment.
+"/*"([^*]|("*"[^/]))*"*/" {
+    // Multi-line or block comment.  Can be inline or not.
 }
 
 {_DELIM} {

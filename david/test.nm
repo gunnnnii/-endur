@@ -1,10 +1,16 @@
 // Leading comment
 
+/* Multi-
+    Line-
+        Block-
+            /*Comment *with* * stars! **
+            */
+
 func(arg1, arg2)	// Trailing comment
 {
 	var local_var0;
 	var local_var1;
-	var chain0, chain1, chain2;
+	var chain0, /* Inline Block Comment */chain1, chain2;
 
 	nameTest;
 	assign0 = assign1;
