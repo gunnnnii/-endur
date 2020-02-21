@@ -12,10 +12,6 @@ import java.io.*;
 
 %{
 
-// This part becomes a verbatim part of the program text inside
-// the class, NanoLexer.java, that is generated.
-
-// Definitions of tokens:
 final static int ERROR = -1;
 final static int EOF = 0;
 final static int NAME = 1001;
@@ -77,7 +73,7 @@ public void advance()throws IOException {
 }
 
 %}
-  /* Regular definitions */
+  
 
 _DIGIT=[0-9]
 _FLOAT={_DIGIT}+\.{_DIGIT}+([eE][+-]?{_DIGIT}+)?
@@ -101,7 +97,7 @@ _VAR="var"
 _RETURN="return"
 
 %%
-  /* Scanning rules */
+  
 
 "//".*$ {
     

@@ -40,18 +40,6 @@ binopexpr2	=	binopexpr3, [ OPNAME2, binopexpr2 ]
 binopexpr3	=	binopexpr4, { OPNAME3, binopexpr4 }
 			;
 
-binopexpr4	=	binopexpr5, { OPNAME4, binopexpr5 }
-			;
-
-binopexpr5	=	binopexpr6, { OPNAME5, binopexpr6 }
-			;
-
-binopexpr6	=	binopexpr7, { OPNAME6, binopexpr7 }
-			;
-
-binopexpr7	=	smallexpr, { OPNAME7, smallexpr }
-			;
-			
 
 smallexpr	=	NAME
 			|	NAME, '(', [ NAME, { ',', NAME } ], ')'
@@ -64,10 +52,7 @@ smallexpr	=	NAME
 opname		=	OPNAME1
 			|	OPNAME2
 			|	OPNAME3
-			|	OPNAME4
-			|	OPNAME5
-			|	OPNAME6
-			|	OPNAME7
+
 			;
 ifexpr		= 'if', '(', expr, ')', body, elsepart
 			;
