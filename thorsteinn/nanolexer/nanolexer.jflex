@@ -1,5 +1,4 @@
 
-
 import java.io.*;
 
 %%
@@ -7,6 +6,8 @@ import java.io.*;
 %public
 %class NanoLexer
 %unicode
+%line
+%column
 %byaccj
 
 %{
@@ -16,57 +17,66 @@ import java.io.*;
 
 // Definitions of tokens:
 final static int ERROR = -1;
-final static int IF= 1001;
-final static int ELSEIF= 1002;
-final static int ELSE= 1003;
-final static int WHILE= 1004;
-final static int RETURN= 1005;
-final static int VAR= 1006;
-final static int ASSIGNMENT= 1007;
-final static int NAME = 1008;
-final static int LITERAL = 1009;
-final static int OPNAME = 10010;
+final static int EOF = 0;
+final static int NAME = 1001;
+final static int LITERAL = 1002;
+final static int IF= 1003;
+final static int ELSEIF= 1004;
+final static int ELSE= 1005;
+final static int WHILE= 1006;
+final static int RETURN= 1007;
+final static int VAR= 1008;
+final static int ASSIGNMENT= 1009;
+final static int COMPARATOR_OP = 1011;
+final static int ADDITIVE_OP = 1012;
+final static int MULT_OP = 1013;
+final static int LOGIC_OR = 1014;
+final static int LOGIC_AND = 1015;
 
 
-
-// A variable that will contain lexemes as they are recognized:
 private static String lexeme;
-private int t;
-// This runs the scanner:
+private static int token;
+
 public static void main( String[] args ) throws Exception
 {
 	NanoLexer lexer = new NanoLexer(new FileReader(args[0]));
-	int token = lexer.yylex();
+
+	
+
+	lexer.advance();
+
 	while( token!=0 )
 	{
-		
 		System.out.println(""+token+": \'"+lexeme+"\'");
-		token = lexer.yylex();
+        token =lexer.getToken();
+        lexer.advance();
 
 	}
+	
 }
 
+public int lineNr() {
+    return yyline + 1;
 
+}
 
-public int getToken(){
-	return t;
+public int columnNr() {
+    return yycolumn + 1;
+}
+
+public int getToken()  throws Exception{
+	return token;
 }
 
 public String getLexeme(){
 	return lexeme;
 }
 
-public int advance()throws IOException {
-	return this.yylex();
+public void advance()throws IOException {
+    token=this.yylex();
 }
 
-
-
-
 %}
-
-  /* Reglulegar skilgreiningar */
-
   /* Regular definitions */
 
 _DIGIT=[0-9]
@@ -74,105 +84,130 @@ _FLOAT={_DIGIT}+\.{_DIGIT}+([eE][+-]?{_DIGIT}+)?
 _INT={_DIGIT}+
 _STRING=\"([^\"\\]|\\b|\\t|\\n|\\f|\\r|\\\"|\\\'|\\\\|(\\[0-3][0-7][0-7])|\\[0-7][0-7]|\\[0-7])*\"
 _CHAR=\'([^\'\\]|\\b|\\t|\\n|\\f|\\r|\\\"|\\\'|\\\\|(\\[0-3][0-7][0-7])|(\\[0-7][0-7])|(\\[0-7]))\'
-_DELIM=[(){};,]
-_NAME=([:letter:]|{_DIGIT})+
-_OPNAME=[\+\-*/]
-
-
+_DELIM=[(){}\[\],;]
+_NAME=[:letter:]([:letter:]|[_]|{_DIGIT})*
+_LOGIC_OR="||"
+_LOGIC_AND="&&"
+_MULT_OP=[\*/]
+_ADDITIVE_OP=[\+\-]
+_COMPARATOR_OP=[!=]=
+_ASSIGNMENT="="
+_LITERAL={_STRING}|{_FLOAT}|{_CHAR}|{_INT}|null|true|false
+_IF="if"
+_ELSEIF="elseif"
+_ELSE ="else"
+_WHILE="while"
+_VAR="var"
+_RETURN="return"
 
 %%
-
-  /* Lesgreiningarreglur */
   /* Scanning rules */
+
+"//".*$ {
+    
+}
+
+"/*"([^*]|("*"[^/]))*"*/" {
+   
+    }
 
 {_DELIM} {
 	lexeme = yytext();
-	t = yycharat(0);
+    token = yycharat(0);
 	return yycharat(0);
 }
 
-
-
-{_OPNAME} {
+{_LITERAL} {
 	lexeme = yytext();
-	t = OPNAME;
-	return OPNAME;
-}
-
-
-
-{_STRING} | {_FLOAT} | {_CHAR} | {_INT} | null | true | false {
-	lexeme = yytext();
-	t = LITERAL;
+    token = LITERAL;
 	return LITERAL;
 }
 
-
-
-
-"if" {
+{_IF} {
 	lexeme = yytext();
-	t = IF;
+    token = IF;
 	return IF;
 }
 
-
-"elseif" {
+{_ELSE} {
 	lexeme = yytext();
-	t = ELSEIF;
-	return ELSEIF;
-}
-
-
-"else" {
-	lexeme = yytext();
-	t = ELSE;
+    token = ELSE;
 	return ELSE;
 }
 
-
-"while" {
+{_ELSEIF} {
 	lexeme = yytext();
-	t = WHILE;
+    token = ELSEIF;
+	return ELSEIF;
+}
+
+{_WHILE} {
+	lexeme = yytext();
+    token = WHILE;
 	return WHILE;
 }
 
-
-"var" {
+{_VAR} {
 	lexeme = yytext();
-	t = VAR;
+    token = VAR;
 	return VAR;
 }
 
-
-"return" {
+{_RETURN} {
 	lexeme = yytext();
-	t = RETURN;
 	return RETURN;
 }
 
-
-"=" {
-	lexeme = yytext();	
-	t = ASSIGNMENT;
-	return ASSIGNMENT;
-}
 {_NAME} {
-	lexeme = yytext();	
-	t = NAME;
+	lexeme = yytext();
+    token = NAME;
 	return NAME;
 }
 
+{_COMPARATOR_OP} {
+	lexeme = yytext();
+    token = COMPARATOR_OP;
+	return COMPARATOR_OP;
+}
+
+{_ASSIGNMENT} {
+	lexeme = yytext();
+    token = ASSIGNMENT;
+	return ASSIGNMENT;
+}
+
+{_LOGIC_OR} {
+    lexeme = yytext();
+    token = LOGIC_OR;
+    return LOGIC_OR;
+}
+
+{_LOGIC_AND} {
+    lexeme = yytext();
+    token = LOGIC_AND;
+    return LOGIC_AND;
+}
 
 
-"//".*$ {
+{_MULT_OP} {
+    lexeme = yytext();
+    token = MULT_OP;
+    return MULT_OP;
+}
+
+{_ADDITIVE_OP} {
+    lexeme = yytext();
+    token = ADDITIVE_OP;
+    return ADDITIVE_OP;
 }
 
 [ \t\r\n\f] {
 }
 
+
+
 . {
 	lexeme = yytext();
-	t=ERROR;
+    token = ERROR;
 	return ERROR;
 }
