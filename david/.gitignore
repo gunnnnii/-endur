@@ -1,3 +1,20 @@
-# Exception -- Parser.java should be included in repo, contains
-#  Recursive-Descent parser for nanoMorpho-like language.
+# Exception -- Specific .java files that need to be tracked.
 !Parser.java
+!SymbolTable.java
+!TcAssign.java
+!TcCall.java
+!TcFunction.java
+!TcLiteral.java
+!TcProgram.java
+!TcReturn.java
+!TcValue.java
+!TreeCode.java
+
+# Ignore morpho assemblies and executables.
+*.masm
+*.mexe
+
+# Ignore testing .morpho code.
+*.morpho
+
+.idea/*

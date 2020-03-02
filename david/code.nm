@@ -1,0 +1,20 @@
+main()
+{
+    var start;
+    var result;
+
+    start = 10;
+    result = modify(start, 3);
+
+    println(result);
+}
+
+// Given base = 10, other = 2, should return 13.
+modify(base, other)
+{
+    var mul;
+
+    mul = 3;
+
+    return mul * (base + 5 - 3) / (1 + other);
+}

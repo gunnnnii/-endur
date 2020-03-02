@@ -16,9 +16,11 @@
 	<arg_list>		::=		\eps
 							<NAME> <arg_tail>
 
+		NOTE: Parsing rolled into p_arg_list(..)
 	<arg_tail>		::=		\eps
 							',' <NAME> <arg_tail>
 
+		NOTE: Parsing rolled into p_function(..)
 	<func_body>		::=		'{' <decl_list> <expr_list> '}'
 
 	<decl_list>		::=		\eps
@@ -26,11 +28,13 @@
 
 	<expr_list>		::=		<expr> ';' <expr_tail>
 
+		NOTE: Parsing rolled into p_expr_list(..)
 	<expr_tail>		::=		\eps
 							<expr> ';' <expr_tail>
 
 	<decl>			::=		'var' <NAME> <decl_tail>
 
+		NOTE: Parsing rolled into p_decl(..)
 	<decl_tail>		::=		\eps
 							',' <NAME> <decl_tail>
 
@@ -75,6 +79,7 @@
 	<value_list>	::=		\eps
 					::=		<value_expr> <value_tail>
 
+		NOTE: Parsing rolled into p_value_list(..)
 	<value_tail>	::=		',' <value_expr> <value_tail>
 
 	<branch_expr>	::=		'if' '(' <and_expr> ')' <block> <branch_opt> <branch_final>
@@ -91,12 +96,14 @@
  */
 
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.util.Stack;
 
 
 public class Parser {
 	private final NanoLexer			lexer;
 	private final Stack<String>		scope;
+	private TcProgram				tree;
 
 	// Constructor builds and initializes lexer.
 	public Parser(String file)
@@ -110,95 +117,106 @@ public class Parser {
 
 
 
+	// WIP: TreeCode
 	private void p_program()
 			throws Exception
 	{
 		scope.push("<program>");
+
+		Stack<TcFunction> defs = new Stack<>();
+		SymbolTable dummy = new SymbolTable(); 	// We don't need this one, but TcProgram
+												//	requires a non-null table.  Maybe change?
+
 		while (lexer.peekToken(0) != lexer.EOF) {
-			p_function();
+			defs.push(p_function());
 		}
+
+		tree = new TcProgram(dummy, "code", "main", defs.toArray(new TcFunction[0]));
+
 		scope.pop();
 	}
 
-	private void p_function()
+	// WIP: TreeCode
+	private TcFunction p_function()
 			throws Exception
 	{
 		scope.push("<function>");
 		Fragment f = peek(0);
 
+		// Each function has its own Symbol Table.
+		SymbolTable 		table = new SymbolTable();
+		String				name = "";
+		String[]			args = null;
+		String[]			decls = null;
+		TreeCode[]			expr = null;
+
 		if (f.token != lexer.NAME) {
 			err(map(lexer.NAME), f);
 		} else {
+			name = f.lex;
 			lexer.advance();
 		}
 
 		consumeDelim("(");
 
-		p_arg_list();
+		args = p_arg_list();
 
 		consumeDelim(")");
+		consumeDelim("{");
 
-		p_func_body();
+		decls = p_decl_list(null);
+
+		expr = p_expr_list(table);
+
+		consumeDelim("}");
+
+		TcFunction code = new TcFunction(table, name, args, decls, expr);
+
 		scope.pop();
+		return code;
 	}
 
-	private void p_arg_list()
+	// WIP: TreeCode
+	private String[] p_arg_list()
 			throws Exception
 	{
 		scope.push("<arg_list>");
 		Fragment f = peek(0);
 
+		Stack<String> args = new Stack<>();
+
 		if (f.token != lexer.NAME) {
 			scope.pop();
-			return;
+			return new String[0];
 		} else {
-			lexer.advance();
-		}
-
-		p_arg_tail();
-		scope.pop();
-	}
-
-	private void p_arg_tail()
-			throws Exception
-	{
-		scope.push("<arg_tail>");
-		Fragment f = peek(0);
-		if (!checkDelim(",")) {
-			scope.pop();
-			return;
-		} else {
+			args.push(f.lex);
 			lexer.advance();
 		}
 
 		f = peek(0);
-		if (f.token != lexer.NAME) {
-			err(map(lexer.NAME), f);
-		} else {
+		while (f.check(lexer.DELIM, ",")) {
 			lexer.advance();
+			f = peek(0);
+			if (f.token != lexer.NAME) {
+				err(map(lexer.NAME), f);
+			} else {
+				args.push(f.lex);
+				lexer.advance();
+				f = peek(0);
+			}
 		}
 
 		scope.pop();
-		p_arg_tail();
+		return args.toArray(new String[0]);
 	}
 
-	private void p_func_body()
-			throws Exception
-	{
-		scope.push("<func_body>");
-		consumeDelim("{");
-
-		p_decl_list();
-		p_expr_list();
-
-		consumeDelim("}");
-		scope.pop();
-	}
-
-	private void p_decl_list()
+	// WIP: TreeCode
+	private String[] p_decl_list(Stack<String> current)
 			throws Exception
 	{
 		scope.push("<decl_list>");
+
+		Stack<String> decls = (current != null ? current : new Stack<String>());
 
 		// Declaration list could be empty or not, so we must check FIRST(<decl>) in
 		//	order to know whether to expand or end.
@@ -206,16 +224,17 @@ public class Parser {
 		Fragment f = peek(0);
 		if (f.token != lexer.VAR) {
 			scope.pop();
-			return;
+			return decls.toArray(new String[0]);
 		} else {
-			p_decl();
+			p_decl(decls);
 			consumeDelim(";");
 			scope.pop();
-			p_decl_list();
+			return p_decl_list(decls);
 		}
 	}
 
-	private void p_decl()
+	// WIP: TreeCode
+	private void p_decl(Stack<String> decls)
 			throws Exception
 	{
 		scope.push("<decl>");
@@ -231,84 +250,66 @@ public class Parser {
 		if (f.token != lexer.NAME) {
 			err(map(lexer.NAME), f);
 		} else {
-			lexer.advance();
-		}
-
-		p_decl_tail();
-
-		scope.pop();
-	}
-
-	private void p_decl_tail()
-			throws Exception
-	{
-		scope.push("<decl_tail>");
-		Fragment f = peek(0);
-
-		if (!checkDelim(",")) {
-			scope.pop();
-			return;
-		} else {
+			decls.push(f.lex);
 			lexer.advance();
 		}
 
 		f = peek(0);
-		if (f.token != lexer.NAME) {
-			err(map(lexer.NAME), f);
-		} else {
+		while (f.check(lexer.DELIM, ",")) {
 			lexer.advance();
+			f = peek(0);
+			if (f.token != lexer.NAME) {
+				err(map(lexer.NAME), f);
+			} else {
+				decls.push(f.lex);
+				lexer.advance();
+				f = peek(0);
+			}
 		}
 
 		scope.pop();
-		p_decl_tail();
 	}
 
-	private void p_expr_list()
+	// WIP: TreeCode
+	private TreeCode[] p_expr_list(SymbolTable table)
 			throws Exception
 	{
 		scope.push("<expr_list>");
 
-		p_expr();
+		Stack<TreeCode> exprs = new Stack<>();
 
+		exprs.push(p_expr(table));
 		consumeDelim(";");
 
-		p_expr_tail();
+		while (!checkDelim("}")) {
+			exprs.push(p_expr(table));
+			consumeDelim(";");
+		}
 
 		scope.pop();
+
+		return exprs.toArray(new TreeCode[0]);
 	}
 
-	private void p_expr_tail()
-			throws Exception
-	{
-		scope.push("<expr_tail>");
-
-		// NOTE: FOLLOW(<expr_tail>) = { "}" }, thus to determine whether to
-		//	expand the tail or end, we check whether the current token is "}"
-		if (checkDelim("}")) {
-			scope.pop();
-			return;
-		} else {
-			p_expr();
-
-			consumeDelim(";");
-
-			scope.pop();
-			p_expr_tail();
-		}
-	}
-
-	private void p_expr()
+	// WIP: TreeCode
+	private TreeCode p_expr(SymbolTable table)
 			throws Exception
 	{
 		scope.push("<expr>");
+
+		TreeCode out = null;
+
 		Fragment f = peek(0);
 		if (f.token == lexer.LOOP) {
 			p_loop_expr();
+			// TODO: Implement Loop TreeCode.
 		} else if (f.token == lexer.BRANCH) {
 			p_branch_expr();
+			// TODO: Implement Branch TreeCode.
 		} else if (f.token == lexer.RETURN) {
 			lexer.advance();
-			p_expr();
+			TreeCode result = p_expr(table);
+			out = new TcReturn(table, result);
 		} else {
 			// Here we need to check the next token further:
 			Fragment f2 = peek(1);
@@ -317,65 +318,84 @@ public class Parser {
 				if (f.token != lexer.NAME) {
 					err(map(lexer.NAME), f);
 				} else {
+					String name = f.lex;
 					lexer.advance();
 					lexer.advance();	// Already checked 2nd token is '='
-					p_expr();
+					TreeCode value = p_expr(table);
+					out = new TcAssign(table, name, value);
 				}
 			} else if (f2.delim("(")) {
 				// <expr> -> <NAME> '(' <value_list> ')'
 				if (f.token != lexer.NAME) {
 					err(map(lexer.NAME), f);
 				} else {
+					String funcName = f.lex;
 					lexer.advance();
 					consumeDelim("(");
-					p_value_list();
+					TreeCode[] args = p_value_list(table);
 					consumeDelim(")");
+					out = new TcCall(table, funcName, args);
 				}
 			} else {
-				p_and_expr();
+				out = p_and_expr(table);
 			}
 		}
 
 		scope.pop();
+		return out;
 	}
 
-	private void p_and_expr()
+	// WIP: TreeCode
+	// NOTE: Implementation is BROKEN pass-through.
+	private TreeCode p_and_expr(SymbolTable table)
 			throws Exception
 	{
 		scope.push("<and_expr>");
 
-		p_or_expr();
+		TreeCode out = p_or_expr(table);
+		scope.pop();
+		return out;
 
+		/*
 		Fragment f = peek(0);
 		if (!f.check(lexer.LOGIC_OP, "&&")) {
 			scope.pop();
-			return;
+			return null;
 		} else {
 			lexer.advance();
 			scope.pop();
-			p_and_expr();
+			p_and_expr(table);
 		}
+		 */
 	}
 
-	private void p_or_expr()
+	// WIP: TreeCode
+	// NOTE: Implementation is BROKEN pass-through.
+	private TreeCode p_or_expr(SymbolTable table)
 			throws Exception
 	{
 		scope.push("<or_expr>");
 
-		p_not_expr();
+		TreeCode out =  p_not_expr(table);
+		scope.pop();
+		return out;
 
+		/*
 		Fragment f = peek(0);
 		if (!f.check(lexer.LOGIC_OP, "||")) {
 			scope.pop();
-			return;
+			return null;
 		} else {
 			lexer.advance();
 			scope.pop();
-			p_or_expr();
+			p_or_expr(table);
 		}
+		 */
 	}
 
-	private void p_not_expr()
+	// WIP: TreeCode
+	// NOTE: Implementation is BROKEN pass-through.
+	private TreeCode p_not_expr(SymbolTable table)
 			throws Exception
 	{
 		scope.push("<not_expr>");
@@ -383,61 +403,93 @@ public class Parser {
 		if (f.check(lexer.LOGIC_OP, "!")) {
 			lexer.advance();
 		}
-		p_cmp_expr();
+		TreeCode out =  p_cmp_expr(table);
 		scope.pop();
+		return out;
 	}
 
-	private void p_cmp_expr()
+	// WIP: TreeCode
+	// NOTE: Implementation is BROKEN pass-through.
+	private TreeCode p_cmp_expr(SymbolTable table)
 			throws Exception
 	{
 		scope.push("<cmp_expr>");
 
-		p_sum_expr();
+		TreeCode out = p_sum_expr(table);
+		scope.pop();
+		return out;
 
+		/*
 		Fragment f = peek(0);
 		if (f.token == lexer.CMP_OP) {
 			lexer.advance();
-			p_sum_expr();
+			p_sum_expr(table);
 		}
 
 		scope.pop();
+		 */
 	}
 
-	private void p_sum_expr()
+	// WIP: TreeCode
+	private TreeCode p_sum_expr(SymbolTable table)
 			throws Exception
 	{
+		TreeCode out = null;
+		TreeCode[] args = new TreeCode[2];
+		String name = "";
+
 		scope.push("<sum_expr>");
 
-		p_mul_expr();
+		args[0] = p_mul_expr(table);
 
 		Fragment f = peek(0);
 		if (f.token == lexer.SUM_OP) {
+			name = f.lex;
 			lexer.advance();
-			p_sum_expr();
+			args[1] = p_sum_expr(table);
+			out = new TcCall(table, name, args);
+		} else {
+			out = args[0];
 		}
 
 		scope.pop();
+		return out;
 	}
 
-	private void p_mul_expr()
+	// WIP: TreeCode
+	private TreeCode p_mul_expr(SymbolTable table)
 			throws Exception
 	{
+		TreeCode out = null;
+		TreeCode[] args = new TreeCode[2];
+		String name = "";
+
 		scope.push("<mul_expr>");
 
-		p_value_expr();
+		args[0] = p_value_expr(table);
 
 		Fragment f = peek(0);
 		if (f.token == lexer.MUL_OP) {
+			name = f.lex;
 			lexer.advance();
-			p_mul_expr();
+			args[1] = p_mul_expr(table);
+			out = new TcCall(table, name, args);
+		} else {
+			out = args[0];
 		}
 
 		scope.pop();
+		return out;
 	}
 
-	private void p_value_expr()
+	// WIP: TreeCode
+	// NOTE: Implementation is BROKEN pass-through; only processes
+	//	<NAME> or <LITERAL> into TreeCode.
+	private TreeCode p_value_expr(SymbolTable table)
 			throws Exception
 	{
+		TreeCode out = null;
+
 		scope.push("<value_expr>");
 		Fragment f = peek(0);
 		Fragment f2 = peek(1);
@@ -448,51 +500,47 @@ public class Parser {
 			p_prefix_expr();
 		} else if (f.check(lexer.DELIM, "(")) {
 			lexer.advance();
-			p_expr();
+			out = p_expr(table);
 			consumeDelim(")");
-		} else if (f.token == lexer.NAME || f.token == lexer.LITERAL) {
-			// <NAME> or <LITERAL>
+		} else if (f.token == lexer.NAME) {
+			out = new TcValue(table, f.lex);
+			lexer.advance();
+		} else if (f.token == lexer.LITERAL) {
+			out = new TcLiteral(table, f.lex);
 			lexer.advance();
 		} else {
 			err(map(-2), f);
 		}
 
 		scope.pop();
+		return out;
 	}
 
-	private void p_value_list()
+	// WIP: TreeCode
+	private TreeCode[] p_value_list(SymbolTable table)
 			throws Exception
 	{
+		Stack<TreeCode> list = new Stack<>();
 		// FOLLOW(<value_list>) is only { ")" }, so we check against this
 		//	to determine whether to expand or epsilon.
 		scope.push("<value_list>");
 		Fragment f = peek(0);
 		if (f.check(lexer.DELIM, ")")) {
 			scope.pop();
-			return;
+			return new TreeCode[0];
 		} else {
-			p_value_expr();
-			p_value_tail();
+			list.push(p_value_expr(table));
+
+			f = peek(0);
+			while (f.check(lexer.DELIM, ",")) {
+				lexer.advance();
+				list.push(p_value_expr(table));
+				f = peek(0);
+			}
 		}
 
 		scope.pop();
-	}
-
-	private void p_value_tail()
-			throws Exception
-	{
-		scope.push("<value_tail>");
-		Fragment f = peek(0);
-
-		if (!f.check(lexer.DELIM, ",")) {
-			scope.pop();
-			return;
-		} else {
-			consumeDelim(",");
-			p_value_expr();
-			scope.pop();
-			p_value_tail();
-		}
+		return list.toArray(new TreeCode[0]);
 	}
 
 	private void p_prefix_expr()
@@ -547,7 +595,7 @@ public class Parser {
 		} else {
 			lexer.advance();
 			consumeDelim("(");
-			p_and_expr();
+			p_and_expr(null);
 			consumeDelim(")");
 			p_block();
 			p_branch_opt();
@@ -568,7 +616,7 @@ public class Parser {
 		} else {
 			lexer.advance();
 			consumeDelim("(");
-			p_and_expr();
+			p_and_expr(null);
 			consumeDelim(")");
 			p_block();
 			scope.pop();
@@ -599,7 +647,7 @@ public class Parser {
 		if (f.check(lexer.LOOP, "while")) {
 			lexer.advance();
 			consumeDelim("(");
-			p_and_expr();
+			p_and_expr(null);
 			consumeDelim(")");
 			p_block();
 		}
@@ -613,7 +661,7 @@ public class Parser {
 		scope.push("<block>");
 
 		consumeDelim("{");
-		p_expr_list();
+		p_expr_list(null);
 		consumeDelim("}");
 
 		scope.pop();
@@ -679,6 +727,14 @@ public class Parser {
 			throws Exception
 	{
 		p_program();
+		System.out.println("Parse Complete, generating code..");
+
+		FileWriter out = new FileWriter("code.masm");
+		String[] lines = tree.MasmCode(false);
+		for (String s : lines) {
+			out.write(s + "\n");
+		}
+		out.close();
 	}
 
 	public void printSymbolStack() {
@@ -709,6 +765,7 @@ public class Parser {
 			p.printSymbolStack();
 		} catch (Exception e) {
 			System.out.println("Unhandled exception: " + e.getMessage());
+			p.printSymbolStack();
 		}
 	}
 
