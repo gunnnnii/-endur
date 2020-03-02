@@ -1,3 +1,5 @@
+// NOTE: This file is NOT a VALID .nm code.
+
 // Leading comment
 
 /* Multi-
@@ -19,7 +21,7 @@ func(arg1, arg2)	// Trailing comment
 
 	nameTest;
 	assign0 = assign1;
-	func(10, 0.4, null, false, true, "string", 'c', (compound_var--), (func2(a, b, c)));
+	func(10, 0.4, null, false, true, "string", 'c', (--compound_var), (func2(a, b, c)));
 	add0 = (add1 + add2);
 	if (condition == 0)
 	{
@@ -33,7 +35,7 @@ func(arg1, arg2)	// Trailing comment
 
 	while (true)
 	{
-		local_var0++;
+		++local_var0;
 	};
 
 	return true;

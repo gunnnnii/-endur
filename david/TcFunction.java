@@ -5,15 +5,22 @@ import java.util.ArrayList;
 // TcFunction class ..................
 public class TcFunction extends TreeCode {
 
-	public TcFunction(SymbolTable t, String funcName, String[] args, String[] decls, TreeCode[] expr)
-			throws Exception
-	{
+	public TcFunction(SymbolTable t, String funcName, String[] args_in, String[] decls_in, TreeCode[] expr) {
 		super(t);
 
-		if (expr == null) {
-			throw new IllegalArgumentException("Function body TreeCode[] must exist.");
-		}
+		name = funcName;
+		args = args_in;
+		decls = decls_in;
+		body = expr;
+	}
 
+	// NOTE: This method will generate code for the final expression of the function
+	//	as a tail expression.  This may or may not be a good idea!  Must experiment
+	//	further.
+	@Override
+	public String[] MasmCode(boolean tail)
+			throws CompilerError
+	{
 		// Register the arguments and declared variables with the symbol table.
 		for (String a : args) {
 			table.register(a);
@@ -23,19 +30,8 @@ public class TcFunction extends TreeCode {
 			table.register(d);
 		}
 
-		name = funcName;
-		argCount = args.length;
-		declCount = decls.length;
-		body = expr;
-	}
-
-	// NOTE: This method will generate code for the final expression of the function
-	//	as a tail expression.  This may or may not be a good idea!  Must experiment
-	//	further.
-	@Override
-	public String[] MasmCode(boolean tail)
-			throws Exception
-	{
+		final int			argCount = args.length;
+		final int			declCount = decls.length;
 		final int 			N = body.length;
 		ArrayList<String>	output = new ArrayList<>();
 
@@ -63,7 +59,7 @@ public class TcFunction extends TreeCode {
 	}
 
 	private String		name;
-	private int 		argCount;
-	private int 		declCount;
+	private String[]	args;
+	private String[]	decls;
 	private TreeCode[]	body;
 }

@@ -5,10 +5,8 @@ import java.util.ArrayList;
 // NOTE: This class can only represent a LEAF in the TreeCode schema.
 public class TcLiteral extends TreeCode {
 
-	public TcLiteral(SymbolTable t, String literal)
-			throws Exception
-	{
-		super(t);
+	public TcLiteral(String literal) {
+		super(null);
 
 		value = literal;
 	}

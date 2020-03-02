@@ -33,23 +33,42 @@ import java.io.*;
 // Definitions of tokens:
 final static int ERROR = -1;
 final static int EOF = 0;
-final static int DELIM = 1000;
+final static int SEMICOLON = 1000;
+final static int COMMA = 1001;
+final static int OPEN_PAREN = 1002;
+final static int OPEN_BLOCK = 1003;
+final static int OPEN_BRACKET = 1004;
+final static int CLOSE_PAREN = 1006;
+final static int CLOSE_BLOCK = 1007;
+final static int CLOSE_BRACKET = 1008;
 
 final static int NAME = 1010;
 final static int LITERAL = 1011;
 
-final static int MOD_OP = 1020;
-final static int MUL_OP = 1021;
-final static int SUM_OP = 1022;
-final static int CMP_OP = 1023;
-final static int LOGIC_OP = 1024;
+final static int OP_INC = 1020;
+final static int OP_DEC = 1021;
+final static int OP_MUL = 1022;
+final static int OP_DIV = 1023;
+final static int OP_ADD = 1024;
+final static int OP_SUB = 1025;
+final static int OP_LIST = 1026;
 
-final static int ASSIGN = 1030;
+final static int LGC_AND = 1030;
+final static int LGC_OR = 1031;
+final static int LGC_NOT = 1032;
 
-final static int BRANCH = 1040;
-final static int LOOP = 1041;
-final static int VAR = 1042;
-final static int RETURN = 1043;
+final static int OP_SET = 1040;
+final static int OP_CMP = 1041;
+
+final static int BRN_IF = 1050;
+final static int BRN_ELIF = 1051;
+final static int BRN_ELSE = 1052;
+
+final static int LP_WHILE = 1060;
+
+// Miscellaneous keywords..
+final static int VAR = 1070;
+final static int RET = 1071;
 
 // A variable that will contain lexemes as they are recognized:
 private static String lexeme;
@@ -161,7 +180,7 @@ public void advance()
 //  any tokens beyond the first EOF will also be EOF.  The lexeme associated
 //  with the EOF instance in this case is \eps, the empty string.
 public void init(int lookAhead)
-        throws Exception
+        throws IOException, IllegalArgumentException
 {
     if (lookAhead <= 0) {
         throw new IllegalArgumentException();
@@ -191,21 +210,37 @@ _INT={_DIGIT}+
 _STRING=\"([^\"\\]|\\b|\\t|\\n|\\f|\\r|\\\"|\\\'|\\\\|(\\[0-3][0-7][0-7])|\\[0-7][0-7]|\\[0-7])*\"
 _CHAR=\'([^\'\\]|\\b|\\t|\\n|\\f|\\r|\\\"|\\\'|\\\\|(\\[0-3][0-7][0-7])|(\\[0-7][0-7])|(\\[0-7]))\'
 
-// Begin modified set of Regular Definitions:
-
-_DELIM=[(){}\[\],;]
+/* Revision to regular definitions.  Note that this list is a bit
+    more comprehensive/exhaustive, and it may make life easier in
+    the future, in exchange for a bit more code now. */
 _NAME=[:letter:]([:letter:]|[_]|{_DIGIT})*
-_LOGIC_OP="&&"|"||"|"!"
-_MOD_OP=(\+\+)|(\-\-)
-_MUL_OP=[\*/]
-_SUM_OP=[\+\-]
-_COMPARATOR=[!=]=|[<>]=?
-_ASSIGN="="
 _LITERAL={_STRING}|{_FLOAT}|{_CHAR}|{_INT}|null|true|false
-_BRANCH="if"|"elseif"|"else"
-_LOOP="while"
+_LGC_AND="&&"
+_LGC_OR="||"
+_LGC_NOT="!"
+_DELIM_SEMI=";"
+_DELIM_COMMA=","
+_DELIM_O_BRACKET="["
+_DELIM_C_BRACKET="]"
+_DELIM_O_PAREN="("
+_DELIM_C_PAREN=")"
+_DELIM_O_BLOCK="{"
+_DELIM_C_BLOCK="}"
+_OP_LIST=":"
+_OP_MUL="*"
+_OP_DIV="/"
+_OP_ADD="+"
+_OP_SUB="-"
+_OP_INC="++"
+_OP_DEC="--"
+_OP_CMP=[!=]=|[<>]=?
+_ASSIGN="="
+_BRN_IF="if"
+_BRN_ELIF="elseif"
+_BRN_ELSE="else"
+_LP_WHILE="while"
 _VAR="var"
-_RETURN="return"
+_RET="return"
 
 %%
   /* Scanning rules */
@@ -218,69 +253,154 @@ _RETURN="return"
     // Multi-line or block comment.  Can be inline or not.
 }
 
-{_DELIM} {
-	lexeme = yytext();
-	return DELIM;
+/* Delimiter rules */
+{_DELIM_SEMI} {
+	lexeme = "";
+	return SEMICOLON;
 }
 
+{_DELIM_COMMA} {
+    lexeme = "";
+    return COMMA;
+}
+
+{_DELIM_O_PAREN} {
+	lexeme = "";
+	return OPEN_PAREN;
+}
+
+{_DELIM_C_PAREN} {
+	lexeme = "";
+	return CLOSE_PAREN;
+}
+
+{_DELIM_O_BRACKET} {
+	lexeme = "";
+	return OPEN_BRACKET;
+}
+
+{_DELIM_C_BRACKET} {
+	lexeme = "";
+	return CLOSE_BRACKET;
+}
+
+{_DELIM_O_BLOCK} {
+	lexeme = "";
+	return OPEN_BLOCK;
+}
+
+{_DELIM_C_BLOCK} {
+	lexeme = "";
+	return CLOSE_BLOCK;
+}
+
+
+/* Literals may contain keywords. */
 {_LITERAL} {
 	lexeme = yytext();
 	return LITERAL;
 }
 
-{_BRANCH} {
-	lexeme = yytext();
-	return BRANCH;
+
+/* Keyword rules precede NAME */
+{_BRN_IF} {
+	lexeme = "";
+	return BRN_IF;
 }
 
-{_LOOP} {
-	lexeme = yytext();
-	return LOOP;
+{_BRN_ELIF} {
+	lexeme = "";
+	return BRN_ELIF;
+}
+
+{_BRN_ELSE} {
+	lexeme = "";
+	return BRN_ELSE;
+}
+
+{_LP_WHILE} {
+	lexeme = "";
+	return LP_WHILE;
 }
 
 {_VAR} {
-	lexeme = yytext();
+	lexeme = "";
 	return VAR;
 }
 
-{_RETURN} {
-	lexeme = yytext();
-	return RETURN;
+{_RET} {
+	lexeme = "";
+	return RET;
 }
 
+/* NAME cannot be a keyword. */
 {_NAME} {
 	lexeme = yytext();
 	return NAME;
 }
 
-{_COMPARATOR} {
+/* Comparison operators before assignment. */
+{_OP_CMP} {
 	lexeme = yytext();
-	return CMP_OP;
+	return OP_CMP;
 }
 
 {_ASSIGN} {
-	lexeme = yytext();
-	return ASSIGN;
+	lexeme = "";
+	return OP_SET;
 }
 
-{_LOGIC_OP} {
+/* Logical operator rules. */
+{_LGC_AND} {
     lexeme = yytext();
-    return LOGIC_OP;
+    return LGC_AND;
 }
 
-{_MOD_OP} {
+{_LGC_OR} {
     lexeme = yytext();
-    return MOD_OP;
+    return LGC_OR;
 }
 
-{_MUL_OP} {
+{_LGC_NOT} {
     lexeme = yytext();
-    return MUL_OP;
+    return LGC_NOT;
 }
 
-{_SUM_OP} {
+/* List operator. */
+{_OP_LIST} {
     lexeme = yytext();
-    return SUM_OP;
+    return OP_LIST;
+}
+
+/* Mathematical rules.  Note that inc/dec operators have precedence. */
+{_OP_INC} {
+    lexeme = yytext();
+    return OP_INC;
+}
+
+{_OP_DEC} {
+    lexeme = yytext();
+    return OP_DEC;
+}
+
+{_OP_MUL} {
+    lexeme = yytext();
+    return OP_MUL;
+}
+
+{_OP_DIV} {
+    lexeme = yytext();
+    return OP_DIV;
+}
+
+{_OP_ADD} {
+    lexeme = yytext();
+    return OP_ADD;
+}
+
+{_OP_SUB} {
+    lexeme = yytext();
+    return OP_SUB;
 }
 
 [ \t\r\n\f] {

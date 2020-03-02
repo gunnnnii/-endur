@@ -1,39 +1,56 @@
 
-build: NanoLexer.class Parser.class TreeCode.class SymbolTable.class
-#	javac NanoLexer.java Parser.java TreeCode.java SymbolTable.java
+codes = TcAnd.class TcAssign.class TcBranch.class TcCall.class TcFunction.class \
+         TcLiteral.class TcLoop.class TcNot.class TcOr.class TcProgram.class \
+         TcReturn.class TcValue.class TreeCode.class
 
-SymbolTable.class: SymbolTable.java
-	javac -cp . SymbolTable.java
-TreeCode.class: TreeCode.java SymbolTable.class
-	javac -cp . TreeCode.java
+aux = CompilerError.class FatalError.class TreeCode.class SymbolError.class SymbolTable.class
 
-TcAssign.class: TreeCode.class TcAssign.java
+c: build #$(in).nm
+	java -cp . Compiler $(in).nm $(in).masm
+	java -jar morpho.jar -c $(in).masm
+	java -jar morpho.jar $(in)
+
+build: Compiler.class
+
+$(aux): Error.java TreeCode.java SymbolTable.java
+	javac -cp . Error.java TreeCode.java SymbolTable.java
+
+TcAnd.class: $(aux) TcAnd.java
+	javac -cp . TcAnd.java
+TcAssign.class: $(aux) TcAssign.java
 	javac -cp . TcAssign.java
-TcCall.class: TreeCode.class TcCall.java
+TcBranch.class: $(aux) TcBranch.java
+	javac -cp . TcBranch.java
+TcCall.class: $(aux) TcCall.java
 	javac -cp . TcCall.java
-TcFunction.class: TreeCode.class TcFunction.java
+TcFunction.class: $(aux) TcFunction.java
 	javac -cp . TcFunction.java
-TcLiteral.class: TreeCode.class TcLiteral.java
+TcLiteral.class: $(aux) TcLiteral.java
 	javac -cp . TcLiteral.java
-TcProgram.class: TreeCode.class TcProgram.java
+TcLoop.class: $(aux) TcLoop.java
+	javac -cp . TcLoop.java
+TcNot.class: $(aux) TcNot.java
+	javac -cp . TcNot.java
+TcOr.class: $(aux) TcOr.java
+	javac -cp . TcOr.java
+TcProgram.class: $(aux) TcProgram.java
 	javac -cp . TcProgram.java
-TcReturn.class: TreeCode.class TcReturn.java
+TcReturn.class: $(aux) TcReturn.java
 	javac -cp . TcReturn.java
-TcValue.class: TreeCode.class TcValue.java
+TcValue.class: $(aux) TcValue.java
 	javac -cp . TcValue.java
 
-Parser.class: Parser.java NanoLexer.class TcAssign.class TcCall.class TcFunction.class TcLiteral.class TcProgram.class TcReturn.class TcValue.class
-	javac -cp . Parser.java
+Compiler.class: $(aux) Compiler.java NanoLexer.class $(codes)
+	javac -cp . Compiler.java
 NanoLexer.class: NanoLexer.java
 	javac NanoLexer.java
 NanoLexer.java: nanolexer.jflex
 	java -jar jflex-full-1.7.0.jar nanolexer.jflex
 
 clean:
-	del *~ NanoLexer.java *.class
-test: build test.nm
-	java -cp . Parser test.nm
-gen: build code.nm
-	java -cp . Parser code.nm
+	del *~ NanoLexer.java *.class *.masm *.mexe
+
+test: build code.nm
+	java -cp . Compiler code.nm code.masm
 	java -jar morpho.jar -c code.masm
 	java -jar morpho.jar code

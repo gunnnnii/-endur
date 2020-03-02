@@ -1,10 +1,16 @@
 # Exception -- Specific .java files that need to be tracked.
-!Parser.java
+!Compiler.java
+!Error.java
 !SymbolTable.java
+!TcAnd.java
 !TcAssign.java
+!TcBranch.java
 !TcCall.java
 !TcFunction.java
 !TcLiteral.java
+!TcLoop.java
+!TcNot.java
+!TcOr.java
 !TcProgram.java
 !TcReturn.java
 !TcValue.java

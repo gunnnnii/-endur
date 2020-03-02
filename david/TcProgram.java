@@ -5,10 +5,8 @@ import java.util.ArrayList;
 // TcProgram class ..................
 public class TcProgram extends TreeCode {
 
-	public TcProgram(SymbolTable t, String name, String entryPoint, TcFunction[] funcList)
-			throws Exception
-	{
-		super(t);
+	public TcProgram(String name, String entryPoint, TcFunction[] funcList) {
+		super(null);
 
 		outName = name;
 		entry = entryPoint;
@@ -17,7 +15,7 @@ public class TcProgram extends TreeCode {
 
 	@Override
 	public String[] MasmCode(boolean tail)
-			throws Exception
+			throws CompilerError
 	{
 		ArrayList<String> output = new ArrayList<>();
 		output.add("\"" + outName + ".mexe\" = " + entry + " in");

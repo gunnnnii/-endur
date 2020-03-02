@@ -5,9 +5,7 @@ import java.util.ArrayList;
 // NOTE: This class can only represent a LEAF in the TreeCode schema.
 public class TcValue extends TreeCode {
 
-	public TcValue(SymbolTable t, String varName)
-			throws Exception
-	{
+	public TcValue(SymbolTable t, String varName) {
 		super(t);
 
 		name = varName;
@@ -16,7 +14,7 @@ public class TcValue extends TreeCode {
 	// This TreeCode cannot be tail optimized.
 	@Override
 	public String[] MasmCode(boolean tail)
-			throws Exception
+			throws CompilerError
 	{
 		ArrayList<String> output = new ArrayList<>();
 		output.add("(Fetch " + Integer.toString(table.translate(name)) + ")");

@@ -7,14 +7,8 @@ public class TcCall extends TreeCode {
 	private String		name;
 	private TreeCode[]	args;
 
-	public TcCall(SymbolTable t, String funcName, TreeCode[] funcArgs)
-			throws Exception
-	{
+	public TcCall(SymbolTable t, String funcName, TreeCode[] funcArgs) {
 		super(t);
-
-		if (funcArgs == null) {
-			throw new IllegalArgumentException("Function argument TreeCode[] must exist.");
-		}
 
 		name = funcName;
 		args = funcArgs;
@@ -28,7 +22,7 @@ public class TcCall extends TreeCode {
 	//	call is made.
 	@Override
 	public String[] MasmCode(boolean tail)
-			throws Exception
+			throws CompilerError
 	{
 		final int N = args.length;
 		ArrayList<String> output = new ArrayList<>();

@@ -7,14 +7,8 @@ public class TcAssign extends TreeCode {
 	private String 		name;
 	private TreeCode	valueExpr;
 
-	public TcAssign(SymbolTable t, String varName, TreeCode varValue)
-			throws Exception
-	{
+	public TcAssign(SymbolTable t, String varName, TreeCode varValue) {
 		super(t);
-
-		if (varValue == null) {
-			throw new IllegalArgumentException("Assign value TreeCode must exist.");
-		}
 
 		name = varName;
 		valueExpr = varValue;
@@ -29,7 +23,7 @@ public class TcAssign extends TreeCode {
 	//	is complete.
 	@Override
 	public String[] MasmCode(boolean tail)
-			throws Exception
+			throws CompilerError
 	{
 		ArrayList<String>	output = new ArrayList<>();
 		output.addAll(Arrays.asList(valueExpr.MasmCode(false)));

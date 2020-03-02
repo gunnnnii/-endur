@@ -1,20 +1,42 @@
 main()
 {
     var start;
+    var other;
     var result;
 
     start = 10;
-    result = modify(start, 3);
+    other = 1;
+    result = modify(start, ++other);
 
+    println(other);
     println(result);
 }
 
 // Given base = 10, other = 2, should return 13.
 modify(base, other)
 {
+    var iter;
     var mul;
+    var sum;
 
-    mul = 3;
+    if (other > 2) {
+        println("Big other!");
+    } elseif (other > 1) {
+        println("Small other..");
+    } else {
+        println("No other :[");
+    };
 
-    return mul * (base + 5 - 3) / (1 + other);
+    iter = 5;
+    while (iter != 0) {
+        println(iter);
+        --iter;
+    };
+
+    sum = 1 + 2 + 3 + 4 + 5;
+    println(sum);
+
+    mul = 2;
+
+    return (mul * (base + 5 - 3) / (1 + other));
 }

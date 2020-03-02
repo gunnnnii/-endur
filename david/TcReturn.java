@@ -5,14 +5,8 @@ import java.util.ArrayList;
 // TcReturn class ..................
 public class TcReturn extends TreeCode {
 
-	public TcReturn(SymbolTable t, TreeCode expr)
-			throws Exception
-	{
+	public TcReturn(SymbolTable t, TreeCode expr) {
 		super(t);
-
-		if (expr == null) {
-			throw new IllegalArgumentException("Return TreeCode must exist.");
-		}
 
 		result = expr;
 	}
@@ -25,7 +19,7 @@ public class TcReturn extends TreeCode {
 	//	generation.
 	@Override
 	public String[] MasmCode(boolean tail)
-			throws Exception
+			throws CompilerError
 	{
 		ArrayList<String> output = new ArrayList<>();
 		output.addAll(Arrays.asList(result.MasmCode(true)));

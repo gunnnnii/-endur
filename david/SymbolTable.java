@@ -10,10 +10,10 @@ import java.util.HashMap;
 //		translated.  This behaviour may be modified later.
 public class SymbolTable {
 	public int translate(String name)
-			throws Exception
+			throws SymbolError
 	{
 		if (!exists(name)) {
-			throw new SymbolException("Invalid symbol - '" + name + "' is not defined.");
+			throw new SymbolError("Invalid symbol - '" + name + "' is not defined.");
 		} else {
 			return table.get(name);
 		}
@@ -24,10 +24,10 @@ public class SymbolTable {
 	}
 
 	public int register(String name)
-			throws Exception
+			throws SymbolError
 	{
 		if (exists(name)) {
-			throw new SymbolException("Symbol collision - '" + name + "' already defined.");
+			throw new SymbolError("Symbol collision - '" + name + "' already defined.");
 		} else {
 			table.put(name, acc++);
 			return acc - 1;
@@ -36,11 +36,4 @@ public class SymbolTable {
 
 	private final HashMap<String, Integer> table = new HashMap<>();
 	private int acc = 0;
-
-	public class SymbolException extends Exception
-	{
-		public SymbolException(String msg) {
-			super(msg);
-		}
-	}
 }
