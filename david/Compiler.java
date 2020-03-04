@@ -43,13 +43,13 @@
 
 	<return_expr>	::=		'return' <and_expr>
 
-	<branch_expr>	::=		'if' '(' <condition> ')' <block> { <branch_opt> } [ <branch_final> ]
+	<branch_expr>	::=		'if' '(' <and_expr> ')' <block> { <branch_opt> } [ <branch_final> ]
 
-	<branch_opt>	::=		'elseif' '(' <condition> ')' <block>
+	<branch_opt>	::=		'elseif' '(' <and_expr> ')' <block>
 
 	<branch_final>	::=		'else' <block>
 
-	<loop_expr>		::=		'while' '(' <condition> ')' <block>
+	<loop_expr>		::=		'while' '(' <and_expr> ')' <block>
 
 	<block>			::=		'{' { <expr> ';' } '}'
 
@@ -332,7 +332,7 @@ public class Compiler {
 		Advance();
 		if (Token() != lexer.OPEN_PAREN) { throw new ParseError(lexer.OPEN_PAREN, Token()); }
 		Advance();
-		condition = p_condition(table);
+		condition = p_and_expr(table);
 		if (Token() != lexer.CLOSE_PAREN) { throw new ParseError(lexer.CLOSE_PAREN, Token()); }
 		Advance();
 		body = p_block(table);
@@ -344,7 +344,7 @@ public class Compiler {
 			Advance();
 			if (Token() != lexer.OPEN_PAREN) { throw new ParseError(lexer.OPEN_PAREN, Token()); }
 			Advance();
-			condition = p_condition(table);
+			condition = p_and_expr(table);
 			if (Token() != lexer.CLOSE_PAREN) { throw new ParseError(lexer.CLOSE_PAREN, Token()); }
 			Advance();
 			body = p_block(table);
@@ -378,7 +378,7 @@ public class Compiler {
 		Advance();
 		if (Token() != lexer.OPEN_PAREN) { throw new ParseError(lexer.OPEN_PAREN, Token()); }
 		Advance();
-		condition = p_condition(table);
+		condition = p_and_expr(table);
 		if (Token() != lexer.CLOSE_PAREN) { throw new ParseError(lexer.CLOSE_PAREN, Token()); }
 		Advance();
 		body = p_block(table);
@@ -579,7 +579,7 @@ public class Compiler {
 			Advance();
 		} else if (Token() == lexer.OPEN_PAREN) {
 			Advance();
-			out = p_expr(table);
+			out = p_and_expr(table);
 			if (Token() != lexer.CLOSE_PAREN) { throw new ParseError(lexer.CLOSE_PAREN, Token()); }
 			Advance();
 		} else if (Token() == lexer.LITERAL) {

@@ -49,8 +49,3 @@ NanoLexer.java: nanolexer.jflex
 
 clean:
 	del *~ NanoLexer.java *.class *.masm *.mexe
-
-test: build code.nm
-	java -cp . Compiler code.nm code.masm
-	java -jar morpho.jar -c code.masm
-	java -jar morpho.jar code

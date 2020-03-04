@@ -1,0 +1,58 @@
+main()
+{
+    // Simple true/false evaluation:
+    if (condition0()) {
+        println("Simple true/false.");
+    };
+
+    // Chained branch evaluation:
+    if (!condition0()) {
+        println("Error.");
+    } elseif (!condition1()) {
+        println("Chained branch.");
+    } elseif (condition2()) {
+        println("Gone too far...");
+    } else {
+        println("Gone way too far...");
+    };
+
+    // Logical && and || in various conditions.
+    if (condition1() && condition0()) {
+         println("LGC_test 0 failed.");
+    } else {
+        println("LGC_test 0 passed.");
+    };
+
+    if (!condition1() && condition0()) {
+         println("LGC_test 1 passed.");
+    } else {
+        println("LGC_test 1 failed.");
+    };
+
+    if (condition2() || condition1()) {
+         println("LGC_test 2 passed.");
+    } else {
+        println("LGC_test 2 failed.");
+    };
+
+    if (!condition1() && !(!condition0() || !condition2())) {
+        println("LGC_test 3 passed.");
+    } else {
+        println("LGC_test 3 failed.");
+    };
+}
+
+condition0() {
+    println("Condition 0 checked.");
+    return true;
+}
+
+condition1() {
+    println("Condition 1 checked.");
+    return false;
+}
+
+condition2() {
+    println("Condition 2 checked.");
+    return true;
+}

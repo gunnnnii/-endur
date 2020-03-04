@@ -53,6 +53,16 @@ public class TcFunction extends TreeCode {
 		// Final expression is called in tail format.
 		output.addAll(Arrays.asList(body[N - 1].MasmCode(true)));
 
+		// HACK: This is a bit of an ugly workaround here.  Rather than
+		//	checking semantically whether the function will definitely
+		//	return at some point, we simply insert a failsafe (Return)
+		//	code at the end of every function, just in case.  This will
+		//	sometimes result in superfluous MASM, but ensures that that
+		//	calling a particular function which does not explicitely
+		//	return (or end on an expression which can be tail optimized)
+		//	will not OVERRUN straight into the next defined function.
+		output.add("(Return)");
+
 		// Close the block.
 		output.add("];");
 		return output.toArray(new String[0]);
